@@ -1,11 +1,4 @@
 function [Lv,bv_bc] = vVelocityLaplacian(Mesh,Boundaries)
-%% include lib
-basefolder = ...
-['C:\Users\kevin\Documents\MANNGA\Data\April 25\' ...
-'2D_StaggeredGrid_NonUniformMesh_FiniteVolume\'];
-addpath(genpath(basefolder));
-%%
-
 
 %% velocity boundary conditions on left and right
 [Lvx,bx_bc] = Laplacian_Nonuniform_Dirichlet(Mesh.Nx, ...
