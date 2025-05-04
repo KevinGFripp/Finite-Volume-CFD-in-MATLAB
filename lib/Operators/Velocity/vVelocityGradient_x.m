@@ -1,11 +1,4 @@
 function [Dv,bv_bc] = vVelocityGradient_x(Mesh,Boundaries)
-%% include lib
-basefolder = ...
-['C:\Users\kevin\Documents\MANNGA\Data\April 25\' ...
-'2D_StaggeredGrid_NonUniformMesh_FiniteVolume\'];
-addpath(genpath(basefolder));
-%%
-
 
 %% velocity boundary conditions on left and right
 [Dvx,bx_bc] = Gradient_Nonuniform_Dirichlet(Mesh.Nx, ...
