@@ -1,10 +1,4 @@
 function Du = uVelocityGradient_x_withShape(Mesh,Shape)
-%% include lib
-basefolder = ...
-['C:\Users\kevin\Documents\MANNGA\Data\April 25\' ...
-'2D_StaggeredGrid_NonUniformMesh_FiniteVolume\'];
-addpath(genpath(basefolder));
-%%
 
 %% 
 Dux = Gradient_Nonuniform(Mesh.Nx+1, ...
