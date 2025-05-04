@@ -1,11 +1,4 @@
 function [Lu,bu_bc] = uVelocityLaplacian_withShape(Mesh,Boundaries,Shape)
-%% include lib
-basefolder = ...
-['C:\Users\kevin\Documents\MANNGA\Data\April 25\' ...
-'2D_StaggeredGrid_NonUniformMesh_FiniteVolume\'];
-addpath(genpath(basefolder));
-%%
-
 
 %% velocity defined on left and right boundaries
  Lux = Laplacian_Nonuniform(Mesh.Nx+1,Mesh.u_dx_centre,Mesh.u_dx);
