@@ -1,10 +1,4 @@
 function [Lv,bv_bc] = vVelocityLaplacian_withShape(Mesh,Boundaries,Shape)
-%% include lib
-basefolder = ...
-['C:\Users\kevin\Documents\MANNGA\Data\April 25\' ...
-'2D_StaggeredGrid_NonUniformMesh_FiniteVolume\'];
-addpath(genpath(basefolder));
-%%
 
 
 %% velocity boundary conditions on left and right
