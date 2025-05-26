@@ -1,8 +1,10 @@
 A 2D time-dependent finite-difference MATLAB solver for the Navier-Stokes equations on non-uniform cartesian meshes with staggered grids.
 
-Two example simulations are included.
-Lid driven cavity at Re = 1000.
-Flow past a square cylinder at Re = 120.
+Two example simulations are included:
+
+Lid driven cavity at Re = 1000 
+
+Flow past a square cylinder at Re = 120
 
 
 The spatial derivatives are computed with 2nd order accuracy.
