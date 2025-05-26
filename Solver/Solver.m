@@ -87,20 +87,6 @@ if strcmp(type,'ESDIRK437L')
    S.dv_n_dt = zeros(Mesh.Nx*(Mesh.Ny+1),S.Stages);
 end
 
-if strcmp(type,'RK4')
-   S.Stages = 4;
-   S.Order = 4;
-   S.LastStageSolution = false;
-   S.du_n_dt = zeros((Mesh.Nx+1)*Mesh.Ny,S.Stages);
-   S.dv_n_dt = zeros(Mesh.Nx*(Mesh.Ny+1),S.Stages);
-end
 
-if strcmp(type,'Euler')
-   S.Stages = 1;
-   S.Order = 1;
-   S.LastStageSolution = true;
-   S.du_n_dt = zeros((Mesh.Nx+1)*Mesh.Ny,S.Stages);
-   S.dv_n_dt = zeros(Mesh.Nx*(Mesh.Ny+1),S.Stages);
-end
 
 end
