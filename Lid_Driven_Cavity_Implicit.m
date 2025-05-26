@@ -1,4 +1,4 @@
-function Lid_Driven_Cavity()
+function Lid_Driven_Cavity_Implicit()
 AddLibraries();
 %% -------Setup-------------
 % Number of cells in grid
@@ -19,7 +19,7 @@ wx = 0.9;
 wy = 0.9;
 Mesh = MakeRectilinearMesh_withShape(Nx,Ny,Width,Height,wx,wy,[]);
 
-Integrator = Solver('RKBS23',Mesh);
+Integrator = Solver('ESDIRK325',Mesh);
 
 % Staggered grid
 uvector = zeros((Nx+1)*Ny,1); % Vx
@@ -29,14 +29,14 @@ vvector = zeros(Nx*(Ny+1),1); % Vy
 velocity = Parameters.Nu * Reynolds_Number/min(Width,Height);
 
 % Time step
-Parameters.dt = 0.1*Fixed_dt(CFL_limit(Width,Mesh,Parameters),Reynolds_Number);
-
- min_dx = EstimateMinCellSize(max(wx,wy),Nx,Width);
- max_dx = EstimateMaxCellSize(max(wx,wy),Nx,Width);
+Parameters.dt = 0.5*Fixed_dt(CFL_limit(Width,Mesh,Parameters),Reynolds_Number);
 
 % Stats
 disp(strcat('Grid size = ',num2str(Nx),'x',num2str(Ny)));
-disp(strcat(' min(dx,dy) =',num2str(min_dx),' max(dx,dy) =',num2str(max_dx)));
+disp(strcat(' min(dx,dy) =', ...
+            num2str(EstimateMinCellSize(max(wx,wy),Nx,Width)), ...
+            ' max(dx,dy) =', ...
+            num2str(EstimateMaxCellSize(max(wx,wy),Nx,Width))));
 disp(strcat(' max(timestep) =',num2str(CFL_limit(Width,Mesh,Parameters))));
 disp(strcat(' timestep =',num2str(Parameters.dt)));
 
@@ -92,20 +92,19 @@ colourmap = Plasma;
  Duration = (8.0*(2*Width +2*Height)/velocity);
  progressbar();
  while T < Duration
-
-    
- [uvector,vvector,Pressure,Error] = ExplicitRungeKutta_NoShape( ...
+ 
+ [uvector,vvector,Pressure,Error] =ImplicitRungeKutta_NoShape( ...
                                Integrator,uvector,vvector,Pressure, ...
                                POperator,uOperator,vOperator, ...
                                Mesh,Boundaries,Parameters,Parameters.dt);
 
    T = T + Parameters.dt;
 
-  Parameters.dt = AdaptTimeStep(Error,Parameters.dt, ...
-                                0.8*CFL_limit(Width,Mesh,Parameters), ...
-                                5e-3,Integrator);
+   Parameters.dt = AdaptTimeStep(Error,Parameters.dt, ...
+                                 2*CFL_limit(Width,Mesh,Parameters), ...
+                                 1e-2,Integrator);
 
-  if (mod(ITER,2) == 0 || T == 0)
+  if (mod(ITER,1) == 0 || T == 0)
    
    % interp velocity to Pressure centres
    u_interp_centre.Values = uvector;
@@ -152,15 +151,6 @@ colourmap = Plasma;
   end
   ITER = ITER +1;
  end
-
-%  [du_dt,dv_dt] = NavierStokes_RK_NoP(uvector,vvector, ...
-%                                              uOperator,vOperator, ...
-%                                              Mesh,Boundaries,Parameters);
-%  figure(3)
-%  imagesc(reshape(log(abs(du_dt)),Nx+1,Ny))
-% 
-%  figure(4)
-%  imagesc(reshape(log(abs(dv_dt)),Nx,Ny+1))
 
 end
 

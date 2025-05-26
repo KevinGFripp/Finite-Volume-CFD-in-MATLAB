@@ -1,4 +1,4 @@
-function Flow_Past_A_Square()
+function Flow_Past_A_Square_Implicit()
 AddLibraries();
 %% -------Setup-------------
 % Number of cells in grid
@@ -11,12 +11,12 @@ Height =3.0; %m
 
 % Parameters 
 % Density , kinematic viscosity, time step
-Parameters =struct('Nu',0.005,'rho',1,'dt',1e-5);
-Reynolds_Number = 100; % Reynolds_Number = (L*u/Nu)
+Parameters =struct('Nu',0.005,'rho',1,'dt',1e-4);
+Reynolds_Number = 120; % Reynolds_Number = (L*u/Nu)
 
 % Mesh Growth Rates
-wx = 0.9;
-wy = 0.9;
+wx = 0.7;
+wy = 0.7;
 
 % Square Edge Length
 D = 0.3;
@@ -26,13 +26,13 @@ Square = DefineBody(W,D,-2.3,Height/Ny,Nx,Ny,Width/Nx,Height/Ny);
 Mesh = MakeRectilinearMesh_withShape(Nx,Ny,Width,Height, ...
                                     [wx wx wx],[wy wy wy],Square);
 
-Integrator = Solver('RK45Fehlberg',Mesh);
+Integrator = Solver('ESDIRK325',Mesh);
 
 % Velocity in terms of Re
 velocity = Parameters.Nu * Reynolds_Number/(D);
 
 % Staggered grid
-uvector = zeros((Nx+1)*Ny,1); % Vx
+uvector = velocity*ones((Nx+1)*Ny,1); % Vx
 vvector = zeros(Nx*(Ny+1),1); % Vy
 
 
@@ -84,7 +84,7 @@ dy_uniform = Height/Ny;
 
 [Xarr,Yarr] = meshgrid((1:ceil(log10(Ny)+1):Ny).*dy_uniform, ...
                         (1:ceil(log10(Nx)+1):Nx).*dx_uniform);
-colourmap = WhiteBlueWhite;
+colourmap = Plasma;
 %% -------------------------
 
 Pressure = InitialPressure_withShape(uvector,vvector, ...
@@ -99,16 +99,15 @@ Pressure = InitialPressure_withShape(uvector,vvector, ...
  progressbar();
  Duration = 8.0;
 
- while T < Duration
- [uvector,vvector,Pressure,Error] = ExplicitRungeKutta_withShape( ...
+ while T < Duration   
+ [uvector,vvector,Pressure,Error] = ImplicitRungeKutta_withShape( ...
                                Integrator,uvector,vvector,Pressure, ...
                                POperator,uOperator,vOperator, ...
                                Mesh,Square,Boundaries,Parameters,Parameters.dt);
-
   T = T + Parameters.dt;
   Parameters.dt = AdaptTimeStep(Error,Parameters.dt, ...
-                                CFL_limit(D,Mesh,Parameters), ...
-                                1e-3,Integrator);
+                                4*CFL_limit(D,Mesh,Parameters), ...
+                                5e-3,Integrator);
   
  if(mod(ITER,1) == 0 || T == 0) 
 
@@ -126,8 +125,8 @@ Pressure = InitialPressure_withShape(uvector,vvector, ...
       hold on
       PlotVectorField(Xarr,Yarr,u_centroid,v_centroid, ...
                      ceil(log10(Nx)+1),ceil(log10(Ny)+1),1.0,[0.1 0.3 0.1]);
-      rectangle('Position',[Square.ycoord Square.xcoord D W], ...
-                'FaceColor',[0.3 0.99 0.3],'EdgeColor','none');
+%       rectangle('Position',[Square.ycoord Square.xcoord D W], ...
+%                 'FaceColor',[0.3 0.99 0.3],'EdgeColor','none');
       ylim([0 6.5])
       axis off;
       hold off;

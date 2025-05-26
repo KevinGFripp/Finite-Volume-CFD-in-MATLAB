@@ -1,13 +1,13 @@
 function Lid_Driven_Cavity_withSquare()
-
+AddLibraries();
 %% -------Setup-------------
 % Number of cells in grid
-Nx=80;
-Ny=80;
+Nx=140;
+Ny=70;
 
 % Domain size
-Width = 1.0; %m
-Height =1.0; %m
+Width = 1.6; %m
+Height =0.8; %m
 
 % Parameters 
 % Density , kinematic viscosity, time step
@@ -15,17 +15,20 @@ Parameters =struct('Nu',0.005,'rho',1,'dt',1e-4);
 Reynolds_Number = 800; % Reynolds_Number = (L*u/Nu)
 
 % Mesh Growth Rates
-wx = 0.7;
-wy = 0.7;
+wx = 0.9;
+wy = 0.9;
 
 Square = DefineBody(0.5,0.2, ...
-                    Width/Nx,Height/Ny, ...
+                    Width/Nx,-0.2, ...
                     Nx,Ny,Width/Nx,Height/Ny);
 
 Mesh = MakeRectilinearMesh_withShape(Nx,Ny,Width,Height, ...
                                     [wx 0.75*wx wx],[wy 0.75*wy wy],Square);
 
+Integrator = Solver('RKBS23',Mesh);
+
 % Staggered grid
+Pressure = zeros(Nx*Ny,1);
 uvector = zeros((Nx+1)*Ny,1); % Vx
 vvector = zeros(Nx*(Ny+1),1); % Vy
 
@@ -33,9 +36,17 @@ vvector = zeros(Nx*(Ny+1),1); % Vy
 velocity = Parameters.Nu * Reynolds_Number/min(Width,Height);
 
 % Time step
-max_dt = (min(Width,Height).^2)*min( (min(Mesh.u_dx)^2)/Parameters.Nu , ...
-         (min(Mesh.u_dy)^2)/Parameters.Nu ); % Nu * dt / dx**2 <= 1 CFL condition
-Parameters.dt = min(0.95*max_dt/log(Reynolds_Number),0.25*max_dt);
+Parameters.dt = 3.75 * Fixed_dt(CFL_limit(Height,Mesh,Parameters), ...
+                               Reynolds_Number);
+
+% Stats
+disp(strcat('Grid size = ',num2str(Nx),'x',num2str(Ny)));
+disp(strcat(' min(dx,dy) =', ...
+            num2str(EstimateMinCellSize(max(wx,wy),Nx,Width)), ...
+            ' max(dx,dy) =', ...
+            num2str(EstimateMaxCellSize(max(wx,wy),Nx,Width))));
+disp(strcat(' max(timestep) =',num2str(CFL_limit(Width,Mesh,Parameters))));
+disp(strcat(' timestep =',num2str(Parameters.dt)));
 
 % Time to steady state
 TIME = ceil(7.5*(2*Width +2*Height)/velocity/Parameters.dt);
@@ -56,15 +67,6 @@ Boundaries = CreateBoundaries('Wall',u_left_wall,v_left_wall,...
                               'Wall',u_bottom_wall,v_bottom_wall,...
                               'Inlet',u_top_wall,v_top_wall);
 
-% Stats
-disp(strcat('Grid size = ',num2str(Nx),'x',num2str(Ny)));
-disp(strcat(' min(dx,dy) =', ...
-            num2str(EstimateMinCellSize(max(wx,wy),Nx,Width)), ...
-            ' max(dx,dy) =', ...
-            num2str(EstimateMaxCellSize(max(wx,wy),Nx,Width))));
-disp(strcat(' max(timestep) =',num2str(max_dt)));
-disp(strcat(' timestep =',num2str(Parameters.dt)));
-
 % Matrix Operators
 [POperator,uOperator,vOperator] = MakeOperators_withShape(Mesh,Boundaries,Square);
 [u_xGrid,u_yGrid,Xq,Yq] = u_velocity_Interp_to_Cell_Centre_Grids(Mesh);
@@ -82,15 +84,16 @@ dy_uniform = Height/Ny;
                         (1:ceil(log10(Nx)+1):Nx).*dx_uniform);
 colourmap = Plasma;
 
-
 %% -------------------------
 
 
  progressbar();
  for ITER = 1:TIME
 
- [uvector,vvector] = MakeStep_withShape(uvector,vvector,POperator,uOperator, ...
-                              vOperator,Mesh,Square,Boundaries,Parameters);
+ [uvector,vvector,Pressure,~] = RKBS23_withShape( ...
+                               Integrator,uvector,vvector,Pressure, ...
+                               POperator,uOperator,vOperator, ...
+                               Mesh,Square,Boundaries,Parameters,Parameters.dt);
   
  
    if mod(ITER,8) == 0
@@ -108,7 +111,7 @@ colourmap = Plasma;
     PlotVectorField(Xarr,Yarr,u_centroid,v_centroid, ...
                     ceil(log10(Nx)+1),ceil(log10(Ny)+1),2.5,[0.90 0.90 1.0]);
     rectangle('Position',[Square.ycoord Square.xcoord 0.2 0.5], ...
-                'FaceColor',[1 0.68 0.55],'EdgeColor','none');
+                'FaceColor',[0 0.68 0.55],'EdgeColor','none');
     hold off
     axis off;
     set(gca,'FontSize',13,'FontName','Times','fontweight','normal');
