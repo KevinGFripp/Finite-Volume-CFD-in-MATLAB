@@ -10,3 +10,15 @@ Flow past a square cylinder at Re = 120
 The spatial derivatives are computed with 2nd order accuracy.
 
 Time integration is performed with adaptive-stepping of either explicit Runge-Kutta (3rd or 5th order) or Implicit ESDIRK methods (3rd or 5th order).
+
+
+
+
+https://github.com/user-attachments/assets/0b842add-72db-4b05-b62a-b2a9df807f08
+
+
+
+
+https://github.com/user-attachments/assets/12b16c07-0724-4b9c-bae4-91766efda1c8
+
+
